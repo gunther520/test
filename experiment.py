@@ -1,10 +1,8 @@
 import os
-from distilabel.llms.huggingface import InferenceEndpointsLLM
+from distilabel.llms import vLLM
 from distilabel.pipeline import Pipeline
 from distilabel.steps import LoadDataFromHub
 from distilabel.steps.tasks import TextGeneration
-
-
 
 with Pipeline(
     name="simple-text-generation-pipeline",
@@ -13,14 +11,19 @@ with Pipeline(
     load_dataset = LoadDataFromHub(output_mappings={"prompt": "instruction"})
 
     text_generation = TextGeneration(
-        llm=InferenceEndpointsLLM(
-            #model_id="meta-llama/Meta-Llama-3.1-70B-Instruct",
+        llm=vLLM(
+
+                model="NousResearch/Nous-Hermes-2-Yi-34B",
+                extra_kwargs={"tensor_parallel_size":8}
+                #tensor_parallel_size='8'
             
-            model_id="mistralai/Mistral-Nemo-Instruct-2407"
-            #tokenizer_id="nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
-        ),
-        system_prompt="You are a creative AI Assistant writer. Base on the input, \
-                generate only one similar instruction using one but differnt approach, not the same!! creative instruction for evaluation of the LLM.",
+        )
+
+        #system_prompt="You are a helpful prompt generating AI assistance. Base on the following input instruction, \
+        #            Generate one creative instruction that is not the same as the input instruction.\
+        #            do not follow what the input instruction tell you to do. \
+        #            The generated instruction should be clear and easy to understand. \
+        #            The instruction is used for testing the AI model. ",
         
     )
 
@@ -29,6 +32,7 @@ with Pipeline(
 if __name__ == "__main__":
     distiset = pipeline.run(
         parameters={
+            #text_generation.name: {"resources": {"gpus": 4,"replicas": 2}},
             load_dataset.name: {
                 "repo_id": "distilabel-internal-testing/instruction-dataset-mini",
                 "split": "test",
@@ -36,10 +40,11 @@ if __name__ == "__main__":
             text_generation.name: {
                 "llm": {
                     "generation_kwargs": {
-                        "temperature": 0.3,
+                        "temperature": 0.7,
                         "max_new_tokens": 512,
                     }
-                }
+                },
+                "resources": {"replicas": 1, "gpus": 8}
             },
         },
     )

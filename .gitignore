@@ -1,3 +1,5 @@
 cuda_try
 cuda_try/cuda-course
 cuda_try/cuda-samples
+.vscode/launch.json
+

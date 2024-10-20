@@ -1,33 +1,121 @@
-from distilabel.steps.tasks import UltraFeedback
-from distilabel.llms.huggingface import InferenceEndpointsLLM
-from distilabel.pipeline import Pipeline
+import os
+from distilabel.llms import vLLM
+from distilabel.pipeline import Pipeline, sample_n_steps
+from distilabel.steps import (
+    GroupColumns,
+    KeepColumns,
+    LoadDataFromHub,
+
+)
+from distilabel.steps.tasks import TextGeneration, UltraFeedback
+
+#sample_three_llms = sample_n_steps(n=2)
 
 
-with Pipeline(
-    name="simple-text-generation-pipeline",
-    description="A simple text generation pipeline",
-) as pipeline:
-# Consider this as a placeholder for your actual LLM.
+with Pipeline(name="ultrafeedback-pipeline") as pipeline:
+    load_hub_dataset = LoadDataFromHub(
+        name="load_dataset",
+        output_mappings={"prompt": "instruction"},
+        batch_size=2,
+    )
+
+    text_generation_with_notus = TextGeneration(
+        name="text_generation_with_notus",
+        llm=vLLM(model="meta-llama/Llama-3.2-1B-Instruct",extra_kwargs={"tensor_parallel_size":2}),
+        input_batch_size=2,
+        output_mappings={"model_name": "generation_model"},
+    )
+    text_generation_with_zephyr = TextGeneration(
+        name="text_generation_with_zephyr",
+        llm=vLLM(model="meta-llama/Llama-3.2-1B",extra_kwargs={"tensor_parallel_size":2}),
+        input_batch_size=2,
+        output_mappings={"model_name": "generation_model"},
+    )
+
+
+    combine_columns = GroupColumns(
+        name="combine_columns",
+        columns=["generation", "generation_model"],
+        output_columns=["generations", "generation_models"],
+        input_batch_size=2
+    )
+
     ultrafeedback = UltraFeedback(
-        llm=InferenceEndpointsLLM(
-            model_id="mistralai/Mistral-7B-Instruct-v0.2",
-            generation_kwargs={"max_new_tokens": 512},
-        ),
-        aspect="helpfulness"
+        name="ultrafeedback_openai",
+        llm=vLLM(model="meta-llama/Llama-3.2-1B",extra_kwargs={"tensor_parallel_size":2}),
+        aspect="overall-rating",
+        output_mappings={"model_name": "ultrafeedback_model"},
     )
 
-    ultrafeedback.load()
+    keep_columns = KeepColumns(
+        name="keep_columns",
+        columns=[
+            "instruction",
+            "generations",
+            "generation_models",
+            "ratings",
+            "rationales",
+            "ultrafeedback_model",
+        ],
+    )
 
-    result = next(
-        ultrafeedback.process(
-            [
-                {
-                    "instruction": "How much is 2+2?",
-                    "generations": ["4", "and a car"],
+    (
+        load_hub_dataset
+       # >> sample_three_llms
+        >> [
+            text_generation_with_notus,
+            text_generation_with_zephyr,
+        ]
+        >> combine_columns
+        >> ultrafeedback
+        >> keep_columns
+    )
+
+
+    distiset = pipeline.run(
+    parameters={
+        load_hub_dataset.name: {
+            "repo_id": "distilabel-internal-testing/instruction-dataset-mini",
+            "split": "test",
+        },
+        text_generation_with_notus.name: {
+            "llm": {
+                "generation_kwargs": {
+                    "max_new_tokens": 512,
+                    "temperature": 0.7,
                 }
-            ]
-        )
-    )
-    
+                
+            },
+            "resources": {"replicas": 1, "gpus": 2}
+        },
+        text_generation_with_zephyr.name: {
+            "llm": {
+                "generation_kwargs": {
+                    "max_new_tokens": 512,
+                    "temperature": 0.7,
+                }
+                
+            },
+            "resources": {"replicas": 1, "gpus": 2}
+        },
 
-pipeline.run()
+        ultrafeedback.name: {
+            "llm": {
+                "generation_kwargs": {
+                    "max_new_tokens": 2048,
+                    "temperature": 0.7,
+                }
+                
+
+            },
+            "resources": {"replicas": 1, "gpus": 2}
+        },
+    }
+)
+    
+    distiset.push_to_hub(
+    "Gunther520/first-test-dataset3",
+    commit_message="Initial commit",
+    private=False,
+    token=os.getenv("HF_TOKEN"),
+    )

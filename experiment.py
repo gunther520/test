@@ -60,11 +60,14 @@ with Pipeline(
         )
 
 
+'''
 
     ultrafeedback = UltraFeedback(
         input_mappings={"instruction": "instruction", "generations": "generations"},
         name="ultrafeedback_vLLM",
-        llm=vLLM(model="tiiuae/falcon-40b-instruct",
+        llm=vLLM(
+            #model="tiiuae/falcon-40b-instruct",
+            model="Qwen/Qwen2.5-1.5B-Instruct",
                  extra_kwargs={"tensor_parallel_size":4}),
         aspect="overall-rating",
         output_mappings={"model_name": "ultrafeedback_model"},
@@ -82,8 +85,9 @@ with Pipeline(
             "ultrafeedback_model",
         ],
     )
-    
-    (
+    '''
+
+(
         load_dataset
 #        >> sample_one_llms
         >> [
@@ -91,8 +95,8 @@ with Pipeline(
             text_generation_Mixtral,
         ]
         >> group_columns
-        >> ultrafeedback
-        >> keep_columns
+    #    >> ultrafeedback
+    #    >> keep_columns
     )
 
 
@@ -125,15 +129,7 @@ if __name__ == "__main__":
                 "resources": {"replicas": 1, "gpus": 2}
             },
 
-            ultrafeedback.name: {
-                "llm": {
-                    "generation_kwargs": {
-                        "temperature": 0.7,
-                        "max_new_tokens": 2048,
-                    }
-                },
-                "resources": {"replicas": 1, "gpus": 4}
-        },
+
         },
 )
     distiset.push_to_hub(

@@ -7,17 +7,13 @@ from vllm import LLM, SamplingParams
 from vllm.inputs import (ExplicitEncoderDecoderPrompt, TextPrompt,
                          TokensPrompt, zip_enc_dec_prompts)
 
-
 dtype = "float"
-
 # Create a BART encoder/decoder model instance
 @profile
 def boo():
 	return LLM(
     		model="/home/hkngae/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659",
     		#model="/home/hkngae/.cache/huggingface/hub/models--meta-llama--Llama-3.1-70B-Instruct/snapshots/945c8663693130f8be2ee66210e062158b2a9693",
-            #model="google/gemma-2-9b",
-            #model="google/gemma-2-27b",
 			#cpu_offload_gb= 16,
 			enable_chunked_prefill=True,
 			max_num_seqs=128,
@@ -30,12 +26,6 @@ def boo():
 llm=boo()
 # Get BART tokenizer
 tokenizer = llm.llm_engine.get_tokenizer_group()
-
-# Test prompts
-#
-# This section shows all of the valid ways to prompt an
-# encoder/decoder model.
-#
 # - Helpers for building prompts
 text_prompt_raw = "To be or not to be, that is "
 text_prompt = TextPrompt(prompt="The president of the Russia is")
@@ -87,9 +77,7 @@ prompts = [
     single_text_prompt_raw, single_text_prompt, single_tokens_prompt,
     #enc_dec_prompt1, enc_dec_prompt2, enc_dec_prompt3
 ] #+ zipped_prompt_list
-
 print(prompts)
-
 # Create a sampling params object.
 sampling_params = SamplingParams(
     temperature=0,

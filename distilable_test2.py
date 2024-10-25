@@ -21,6 +21,13 @@ with Pipeline("pipe-name-2", description="My first pipe2s") as pipeline:
         output_mappings={"prompt": "instruction"},
     )
 
+    keep_columns_only = KeepColumns(
+        name="keep_columns_only",
+        columns=[
+            "instruction",
+        ],
+    )
+
     combine_generations = GroupColumns(
         name="combine_generations",
         columns=["generation", "model_name"],
@@ -51,25 +58,42 @@ with Pipeline("pipe-name-2", description="My first pipe2s") as pipeline:
         ],
     )
 
-
+    load_dataset.connect(keep_columns_only) 
 
 
     for llm in (
-        vLLM(model="meta-llama/Llama-3.2-1B-Instruct",
+        vLLM(model="NousResearch/Hermes-3-Llama-3.1-8B",
             #cuda_devices=[0],
-            extra_kwargs={"distributed_executor_backend": "ray",}),
-        vLLM(model="meta-llama/Llama-3.2-1B",
+            extra_kwargs={ "tensor_parallel_size": 2,}),
+        vLLM(model="Qwen/Qwen2.5-7B-Instruct",
             #cuda_devices=[1],
-            extra_kwargs={"distributed_executor_backend": "ray",}),
+            extra_kwargs={ "tensor_parallel_size": 2,}),
     ):
         task = TextGeneration(
-            name=f"text_generation_with_{llm.model_name[-2:]}", llm=llm
+            name=f"text_generation_with_{llm.model_name[:2]}", llm=llm,
+            
+    #        system_prompt="You are a prompt generator. When given an \
+    #                    input prompt, you will create a new prompt that \
+    #                    Do not follow or answer the instruction. Ensure \
+    #                    the new prompt maintains the same intent and purpose but \
+    #                    introduces variations. For example, if the input is \
+    #                    'What is 5+5?', you could output 'What is 8+9?'.",
+
+            system_prompt="Given the input prompt below,\
+                generate a new prompt with similar purpose.\
+                Do not answer, interpret, or provide additional information for the prompt.\
+                You should be creative. \
+                Output only the generated prompt text, without explanation or additional context.\
+                Here is the original prompt: "
+            
+
+
         )
-        load_dataset.connect(task)
+        keep_columns_only.connect(task)
         task.connect(combine_generations)
     combine_generations.connect(ultrafeedback)
     ultrafeedback.connect(keep_columns)
-    keep_columns.connect(GenerationStep(name="generation_step"))
+    #keep_columns.connect(GenerationStep(name="generation_step"))
 
 if __name__ == "__main__":
     distiset = pipeline.run(
@@ -79,23 +103,23 @@ if __name__ == "__main__":
                 "repo_id": "distilabel-internal-testing/instruction-dataset-mini",
                 "split": "test",
             },
-            "text_generation_with_ct": {
+            "text_generation_with_No": {
                 "llm": {
                     "generation_kwargs": {
                         "temperature": 0.7,
                         "max_new_tokens": 512,
                     }
                 },
-                "resources": { "gpus": 1}
+                "resources": { "gpus": 2}
             },
-            "text_generation_with_1B": {
+            "text_generation_with_Qw": {
                 "llm": {
                     "generation_kwargs": {
                         "temperature": 0.7,
                         "max_new_tokens": 512,
                     }
                 },
-                "resources": { "gpus": 1}
+                "resources": { "gpus": 2}
             },
 
             "ultrafeedback_1": {

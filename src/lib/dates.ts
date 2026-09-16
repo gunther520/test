@@ -164,6 +164,38 @@ export function recencyTimestamp(item: {
   );
 }
 
+export type SortMode = "newest" | "ending";
+
+function endingBucket(
+  item: { publishedAt?: string; endsAt?: string },
+  now: number,
+): [number, number] {
+  const ends = item.endsAt ? Date.parse(item.endsAt) : Number.NaN;
+  if (!Number.isNaN(ends) && ends >= now) return [0, ends];
+  if (Number.isNaN(ends)) return [1, -recencyTimestamp(item)];
+  return [2, -ends];
+}
+
+export function sortGiveaways<T extends { publishedAt?: string; endsAt?: string }>(
+  items: T[],
+  mode: SortMode,
+  now = Date.now(),
+): T[] {
+  const copy = items.slice();
+  if (mode === "ending") {
+    copy.sort((a, b) => {
+      const [aBucket, aTime] = endingBucket(a, now);
+      const [bBucket, bTime] = endingBucket(b, now);
+      if (aBucket !== bBucket) return aBucket - bBucket;
+      if (aTime !== bTime) return aTime - bTime;
+      return recencyTimestamp(b) - recencyTimestamp(a);
+    });
+    return copy;
+  }
+  copy.sort((a, b) => recencyTimestamp(b) - recencyTimestamp(a));
+  return copy;
+}
+
 const MONTHS_SHORT = [
   "Jan",
   "Feb",

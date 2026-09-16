@@ -134,9 +134,13 @@ assert(
 );
 
 assert(
-  displayHost("https://news.google.com/rss/articles/CBMiabc", "facebook.com") ===
-    "facebook.com",
-  "display listed social host",
+  !isEnterableGiveaway({
+    url: "https://news.google.com/rss/articles/CBMiabc",
+    sourceHost: "facebook.com",
+    title: "Congratulations to our Fifth Week Lucky Draw Winners!",
+    snippet: "The Onam celebrations",
+  }),
+  "lucky draw winners recap dropped",
 );
 
 assert(

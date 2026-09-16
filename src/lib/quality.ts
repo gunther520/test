@@ -186,11 +186,18 @@ const CONTEST_INTENT =
 const WEAK_GIVEAWAY = /\bgiveaway\b|give away|抽獎|\bcontest\b|\bprize\b/;
 
 const NON_ENTERABLE =
-  /congratulat\w+\s+to\s+(the\s+|our\s+|those\s+|all\s+)?(winner|those who)|winners?\s+(announced|chosen|selected|picked|are)|how to\s+(run|host|start|do|create)\s+a?\s*(giveaway|contest|raffle)|(best|top)\s+\d+\s+giveaways|giveaway\s+(ideas|tips|guide|recap|round-?up|results|winners)|stimulus giveaway|tax giveaway|giveaway to (israel|ukraine)/i;
+  /congratulat\w+[\s\S]{0,80}\bwinners?\b|congratulat\w+\s+to\s+(the\s+|our\s+|those\s+|all\s+)?(winner|those who)|winners?\s+(announced|chosen|selected|picked|are)|\b(raffle|giveaway|lucky draw)\s+winners?\b|how to\s+(run|host|start|do|create)\s+a?\s*(giveaway|contest|raffle)|(best|top)\s+\d+\s+giveaways|giveaway\s+(ideas|tips|guide|recap|round-?up|results|winners)|stimulus giveaway|tax giveaway|giveaway to (israel|ukraine)/i;
 
 export function hasContestIntent(title: string, snippet = ""): boolean {
   const text = `${title} ${snippet}`;
   return CONTEST_INTENT.test(text.toLowerCase()) || /抽獎|免費送|送你|送出/.test(text);
+}
+
+export function hasStrongEnterIntent(title: string, snippet = ""): boolean {
+  const text = `${title} ${snippet}`;
+  return /comment to win|comment on this post|tag (a friend|friends)|follow to (enter|win)|must be following|retweet to win|\brt to win\b|enter to win|pick(?:ing)? a winner|抽獎|免費送|送你|送出/.test(
+    text.toLowerCase(),
+  ) || /抽獎|免費送|送你|送出/.test(text);
 }
 
 export function isNonEnterableCopy(title: string, snippet = ""): boolean {
@@ -206,7 +213,7 @@ export function mentionsGiveaway(title: string, snippet = ""): boolean {
 export function isEnterableGiveaway(item: QualityFields): boolean {
   if (isJunkNewsHost(item.url, item.sourceHost)) return false;
   if (isBareHomeUrl(item.url) && !isContestHost(item.url)) return false;
-  if (isNonEnterableCopy(item.title, item.snippet) && !hasContestIntent(item.title, item.snippet)) {
+  if (isNonEnterableCopy(item.title, item.snippet) && !hasStrongEnterIntent(item.title, item.snippet)) {
     return false;
   }
   const contesty =

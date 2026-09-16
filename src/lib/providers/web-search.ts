@@ -111,7 +111,7 @@ async function searchNewsRss(query: string): Promise<RawHit[]> {
 }
 
 function rssQueries(userQuery: string, platform: PlatformFilter): string[] {
-  const base = giveawayQuery(userQuery);
+  const base = `${giveawayQuery(userQuery)} when:1m`;
   if (platform !== "all") {
     return [`${base} ${siteQueryFor(platform)}`];
   }

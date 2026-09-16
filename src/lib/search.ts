@@ -1,3 +1,4 @@
+import { isRecentGiveaway, recencyTimestamp } from "./dates";
 import { searchReddit } from "./providers/reddit";
 import { searchWeb } from "./providers/web-search";
 import { dedupe } from "./normalize";
@@ -84,12 +85,11 @@ export async function searchGiveaways(
 
   const results = dedupe(jobs.flatMap((job) => job.results))
     .filter(isRelevant)
+    .filter((item) => isRecentGiveaway(item))
     .sort((a, b) => {
-      const scoreDiff = relevanceScore(b) - relevanceScore(a);
-      if (scoreDiff !== 0) return scoreDiff;
-      const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
-      const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;
-      return bTime - aTime;
+      const timeDiff = recencyTimestamp(b) - recencyTimestamp(a);
+      if (timeDiff !== 0) return timeDiff;
+      return relevanceScore(b) - relevanceScore(a);
     })
     .slice(0, 24);
 
@@ -121,6 +121,6 @@ export async function searchGiveaways(
 export function statusPayload() {
   return {
     setup: [],
-    note: "Free-tier public search only: DuckDuckGo HTML when available, otherwise Google News RSS with site: patterns, plus Reddit public JSON when the host allows it. No API keys required.",
+    note: "Free-tier public search only: DuckDuckGo HTML when available, otherwise Google News RSS with site: patterns, plus Reddit public JSON when the host allows it. No API keys required. Results are limited to the last 31 days.",
   };
 }

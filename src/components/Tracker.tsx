@@ -115,13 +115,14 @@ function EmptyState({
       </p>
       <h2 className="mt-3 font-display text-3xl">No public giveaways matched</h2>
       <p className="mx-auto mt-3 max-w-lg text-ink/75">
-        Nothing turned up for “{query}” on {platformLabel}. Indexed social posts
-        are sparse, and this app does not log into Instagram, Facebook, or X.
+        Nothing recent enough for “{query}” on {platformLabel} in the last 31
+        days. Indexed social posts are sparse, and this app does not log into
+        Instagram, Facebook, or X.
       </p>
       <ul className="mx-auto mt-6 max-w-md space-y-2 text-left text-sm text-ink/80">
         <li>— Try a broader term such as giveaway or lucky draw</li>
         <li>— Switch the platform filter back to All</li>
-        <li>— Public web indexes miss many live social posts; try another wording</li>
+        <li>— Only listings dated in the last 31 days are shown</li>
       </ul>
     </section>
   );
@@ -309,7 +310,7 @@ export function Tracker({
         <p>
           {loading
             ? "Searching public sources…"
-            : `${visible.length} result${visible.length === 1 ? "" : "s"} · ${query}`}
+            : `${visible.length} result${visible.length === 1 ? "" : "s"} · last 31 days · ${query}`}
         </p>
         {data ? (
           <p>
@@ -366,8 +367,9 @@ export function Tracker({
             Drawboard searches public web indexes with DuckDuckGo HTML when
             available, otherwise Google News RSS using each platform’s{" "}
             <code className="font-mono text-xs">site:</code> pattern. Reddit’s
-            public JSON API is used when that host allows it. No API keys, no
-            Gemini, no Custom Search, no Brave, and no Vertex.
+            public JSON API is used when that host allows it. Only listings
+            dated in the last 31 days are shown; undated hits are dropped. No
+            API keys, no Gemini, no Custom Search, no Brave, and no Vertex.
           </p>
           <p className="mt-3 max-w-2xl">
             To track another public source, add a row in{" "}

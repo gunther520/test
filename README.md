@@ -13,6 +13,8 @@ The app **does not** log into social networks, solve CAPTCHAs, or bypass access 
 
 Indexed public URLs are sparse. Some datacenters block DuckDuckGo and Reddit — Google News RSS is the usual unauthenticated fallback.
 
+Only listings dated in the **last 31 days** are shown (RSS `pubDate`, Reddit `created_utc`, or a date parsed from the title/snippet). Hits with no usable date are dropped so old undated posts do not appear.
+
 ## Run locally
 
 ```bash

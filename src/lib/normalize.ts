@@ -1,4 +1,4 @@
-import { extractDates } from "./dates";
+import { extractDates, extractUrlDate } from "./dates";
 import { classifyPlatform } from "./platforms";
 import type { Giveaway, PlatformFilter, ProviderId } from "./types";
 import { looksLikeGiveaway, stableId } from "./http";
@@ -44,7 +44,7 @@ export function normalizeHit(
     platform,
     url,
     snippet: hit.snippet.trim().slice(0, 280),
-    publishedAt: hit.publishedAt,
+    publishedAt: hit.publishedAt ?? dates.publishedAt ?? extractUrlDate(url),
     endsAt: dates.endsAt,
     source: hit.source,
   };

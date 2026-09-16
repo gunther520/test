@@ -32,7 +32,11 @@ export function normalizeHit(
     return null;
   }
 
-  const platform = classifyPlatform(url, `${hit.title} ${hit.snippet}`);
+  const classifyUrl =
+    hostnameOf(url) === "news.google.com" && hit.sourceHost
+      ? `https://${hit.sourceHost}/`
+      : url;
+  const platform = classifyPlatform(classifyUrl, `${hit.title} ${hit.snippet}`);
   if (filter !== "all" && platform !== filter) return null;
   const sourceHost = hit.sourceHost || hostnameOf(url);
   if (isJunkNewsHost(url, sourceHost)) return null;

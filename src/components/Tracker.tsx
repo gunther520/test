@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { formatDate } from "@/lib/dates";
 import { FILTERABLE_PLATFORMS, getPlatform } from "@/lib/platforms";
 import type {
@@ -227,27 +227,33 @@ export function Tracker({
   const [data, setData] = useState<SearchResponse>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+  const searchSeq = useRef(0);
 
   const runSearch = useCallback(async (nextQuery: string, nextPlatform: PlatformFilter) => {
-    setQuery(nextQuery);
+    const q = nextQuery.trim() || "giveaway";
+    const seq = ++searchSeq.current;
+    setQuery(q);
+    setDraft(q);
     setPlatform(nextPlatform);
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({
-        q: nextQuery,
+        q,
         platform: nextPlatform,
       });
       const response = await fetch(`/api/search?${params.toString()}`);
       const payload = (await response.json()) as SearchResponse & { error?: string };
+      if (seq !== searchSeq.current) return;
       setData(payload);
       if (!response.ok && payload.results.length === 0) {
         setError(payload.error ?? payload.warnings[0] ?? "Search backends failed");
       }
     } catch {
+      if (seq !== searchSeq.current) return;
       setError("The app could not reach its own search API. Is the dev server running?");
     } finally {
-      setLoading(false);
+      if (seq === searchSeq.current) setLoading(false);
     }
   }, []);
 
@@ -330,14 +336,14 @@ export function Tracker({
         >
           <FilterChip
             active={platform === "all"}
-            onClick={() => void runSearch(query, "all")}
+            onClick={() => void runSearch(draft, "all")}
             label="All"
           />
           {FILTERABLE_PLATFORMS.map((item) => (
             <FilterChip
               key={item.id}
               active={platform === item.id}
-              onClick={() => void runSearch(query, item.id)}
+              onClick={() => void runSearch(draft, item.id)}
               label={item.label}
             />
           ))}

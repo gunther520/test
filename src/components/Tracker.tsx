@@ -7,7 +7,6 @@ import type {
   Giveaway,
   PlatformFilter,
   SearchResponse,
-  SetupHint,
 } from "@/lib/types";
 
 const SUGGESTIONS = ["giveaway", "lucky draw", "Steam Deck", "AirPods", "raffle"];
@@ -100,11 +99,9 @@ function TicketCard({ item }: { item: Giveaway }) {
 function EmptyState({
   query,
   platform,
-  setup,
 }: {
   query: string;
   platform: PlatformFilter;
-  setup: SetupHint[];
 }) {
   const platformLabel =
     platform === "all" ? "all platforms" : getPlatform(platform).label;
@@ -124,9 +121,8 @@ function EmptyState({
       <ul className="mx-auto mt-6 max-w-md space-y-2 text-left text-sm text-ink/80">
         <li>— Try a broader term such as giveaway or lucky draw</li>
         <li>— Switch the platform filter back to All</li>
-        <li>— Add an optional API key for deeper official search</li>
+        <li>— Public web indexes miss many live social posts; try another wording</li>
       </ul>
-      <SetupList setup={setup} compact />
     </section>
   );
 }
@@ -134,12 +130,10 @@ function EmptyState({
 function ErrorState({
   message,
   warnings,
-  setup,
   onRetry,
 }: {
   message: string;
   warnings: string[];
-  setup: SetupHint[];
   onRetry: () => void;
 }) {
   return (
@@ -160,8 +154,9 @@ function ErrorState({
         </ul>
       ) : null}
       <p className="mt-4 text-sm text-ink/70">
-        Drawboard uses public web search and optional official APIs. It does not
-        scrape login walls, CAPTCHAs, or private accounts.
+        Drawboard uses free public web search only (DuckDuckGo or Google News
+        RSS, plus Reddit when allowed). It does not scrape login walls,
+        CAPTCHAs, or private accounts, and it does not use paid search APIs.
       </p>
       <button
         type="button"
@@ -170,47 +165,7 @@ function ErrorState({
       >
         Retry search
       </button>
-      <SetupList setup={setup} />
     </section>
-  );
-}
-
-function SetupList({
-  setup,
-  compact = false,
-}: {
-  setup: SetupHint[];
-  compact?: boolean;
-}) {
-  if (setup.length === 0) return null;
-  return (
-    <div className={`text-left ${compact ? "mx-auto mt-8 max-w-xl" : "mt-8"}`}>
-      <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-        How to set API keys
-      </h3>
-      <p className="mt-2 text-sm text-ink/70">
-        Copy <code className="font-mono text-xs">.env.example</code> to{" "}
-        <code className="font-mono text-xs">.env.local</code>, fill any keys you
-        have, then restart <code className="font-mono text-xs">npm run dev</code>.
-      </p>
-      <ul className="mt-3 divide-y divide-ink/10 border border-ink/10 bg-ticket">
-        {setup.map((hint) => (
-          <li key={hint.env} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-mono text-sm">{hint.env}</p>
-              <p className="text-sm text-ink/70">{hint.purpose}</p>
-            </div>
-            <span
-              className={`mt-1 font-mono text-[10px] uppercase tracking-widest ${
-                hint.set ? "text-forest" : "text-muted"
-              }`}
-            >
-              {hint.set ? "configured" : "optional"}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -289,8 +244,8 @@ export function Tracker({
             </p>
           </div>
           <p className="max-w-xs font-mono text-[11px] leading-5 text-muted">
-            No login scraping. Results come from public web search, Reddit JSON,
-            and official APIs when keys are set.
+            No login scraping and no paid search APIs. Results come from public
+            web search and Reddit JSON when that host allows it.
           </p>
         </div>
 
@@ -386,14 +341,12 @@ export function Tracker({
           <ErrorState
             message={error ?? "Search failed"}
             warnings={data?.warnings ?? []}
-            setup={data?.setup ?? []}
             onRetry={() => void runSearch(query, platform)}
           />
         ) : visible.length === 0 ? (
           <EmptyState
             query={query}
             platform={platform}
-            setup={data?.setup ?? []}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -407,14 +360,19 @@ export function Tracker({
       <footer className="mt-12 border-t border-ink/20 py-6 text-sm text-muted">
         <details>
           <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.18em]">
-            API keys & adding a platform
+            How public search works
           </summary>
-          <SetupList setup={data?.setup ?? []} />
           <p className="mt-4 max-w-2xl">
+            Drawboard searches public web indexes with DuckDuckGo HTML when
+            available, otherwise Google News RSS using each platform’s{" "}
+            <code className="font-mono text-xs">site:</code> pattern. Reddit’s
+            public JSON API is used when that host allows it. No API keys, no
+            Gemini, no Custom Search, no Brave, and no Vertex.
+          </p>
+          <p className="mt-3 max-w-2xl">
             To track another public source, add a row in{" "}
             <code className="font-mono text-xs">src/lib/platforms.ts</code>{" "}
-            (id, hostnames, site query). Optional official APIs live under{" "}
-            <code className="font-mono text-xs">src/lib/providers/</code>.
+            (id, hostnames, site query).
           </p>
         </details>
       </footer>

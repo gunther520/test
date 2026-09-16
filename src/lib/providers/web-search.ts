@@ -1,7 +1,7 @@
 import { fetchWithTimeout, ProviderError, unwrapDuckDuckGoUrl, decodeHtml } from "../http";
 import { FILTERABLE_PLATFORMS, giveawayQuery, siteQueryFor } from "../platforms";
 import { normalizeHit, type RawHit } from "../normalize";
-import { isEnterablePostUrl, isJunkNewsHost } from "../quality";
+import { isEnterablePostUrl, isJunkNewsHost, isBareHomeUrl, hostnameOf } from "../quality";
 import type { Giveaway, PlatformFilter } from "../types";
 
 const RSS_PER_FEED = 12;
@@ -16,8 +16,10 @@ function unwrapRssLink(link: string, sourceHref: string, snippet: string): strin
   const candidates = [link, firstHttpUrl(snippet) ?? "", sourceHref].filter(Boolean);
   const social = candidates.find((url) => isEnterablePostUrl(url));
   if (social) return social;
-  const notNews = candidates.find((url) => url && !isJunkNewsHost(url));
-  if (notNews) return notNews;
+  const usable = candidates.find(
+    (url) => url && !isJunkNewsHost(url) && !isBareHomeUrl(url),
+  );
+  if (usable) return usable;
   return link;
 }
 
@@ -99,6 +101,7 @@ function parseRss(xml: string): RawHit[] {
       if (!Number.isNaN(date.getTime())) publishedAt = date.toISOString();
     }
     const url = unwrapRssLink(link, sourceHref, snippet);
+    const sourceHost = hostnameOf(sourceHref) || hostnameOf(url);
     if (title && url) {
       items.push({
         title,
@@ -106,6 +109,7 @@ function parseRss(xml: string): RawHit[] {
         snippet: [sourceName, snippet].filter(Boolean).join(" — ").slice(0, 280),
         publishedAt,
         source: "web-search",
+        sourceHost,
       });
     }
     if (items.length >= RSS_PER_FEED) break;

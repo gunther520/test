@@ -26,6 +26,10 @@ assert(!isEnterablePostUrl("https://x.com/user"), "x profile");
 assert(isJunkNewsHost("https://www.cnn.com/2026/09/01/giveaway"), "cnn");
 assert(isJunkNewsHost("https://en.wikipedia.org/wiki/Giveaway"), "wiki");
 assert(isJunkNewsHost("https://news.google.com/rss/articles/abc"), "gnews");
+assert(
+  !isJunkNewsHost("https://news.google.com/rss/articles/abc", "instagram.com"),
+  "gnews + ig source not junk",
+);
 assert(!isJunkNewsHost("https://www.instagram.com/p/abc"), "ig not junk");
 
 const ig = {
@@ -109,5 +113,40 @@ assert(
 );
 
 assert(displayHost("https://www.instagram.com/p/abc/") === "instagram.com", "display host");
+
+assert(
+  !isEnterableGiveaway({
+    url: "https://www.facebook.com/",
+    title: "Comment on this post and tag a friend giveaway",
+    snippet: "Must be following me",
+  }),
+  "bare facebook home dropped",
+);
+
+assert(
+  isEnterableGiveaway({
+    url: "https://news.google.com/rss/articles/CBMiabc",
+    sourceHost: "facebook.com",
+    title: "Quick giveaway — comment on this post and tag a friend",
+    snippet: "Must be following me",
+  }),
+  "google news facebook source with intent kept",
+);
+
+assert(
+  displayHost("https://news.google.com/rss/articles/CBMiabc", "facebook.com") ===
+    "facebook.com",
+  "display listed social host",
+);
+
+assert(
+  !isEnterableGiveaway({
+    url: "https://news.google.com/rss/articles/CBMiabc",
+    sourceHost: "cnn.com",
+    title: "Comment to win a car giveaway",
+    snippet: "ends tomorrow",
+  }),
+  "google news cnn source dropped",
+);
 
 console.log("ok quality filter");

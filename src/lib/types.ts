@@ -29,6 +29,7 @@ export type Giveaway = {
   publishedAt?: string;
   endsAt?: string;
   source: ProviderId;
+  sourceHost?: string;
 };
 
 export type ProviderStatus = {

@@ -1,6 +1,6 @@
 import { extractDates, extractUrlDate } from "./dates";
 import { classifyPlatform } from "./platforms";
-import { isEnterableGiveaway, isJunkNewsHost } from "./quality";
+import { isEnterableGiveaway, isJunkNewsHost, hostnameOf } from "./quality";
 import type { Giveaway, PlatformFilter, ProviderId } from "./types";
 import { stableId } from "./http";
 
@@ -10,6 +10,7 @@ export type RawHit = {
   snippet: string;
   publishedAt?: string;
   source: ProviderId;
+  sourceHost?: string;
 };
 
 export function normalizeHit(
@@ -33,7 +34,8 @@ export function normalizeHit(
 
   const platform = classifyPlatform(url, `${hit.title} ${hit.snippet}`);
   if (filter !== "all" && platform !== filter) return null;
-  if (isJunkNewsHost(url)) return null;
+  const sourceHost = hit.sourceHost || hostnameOf(url);
+  if (isJunkNewsHost(url, sourceHost)) return null;
   const dates = extractDates(`${hit.title} ${hit.snippet}`);
   const candidate = {
     id: stableId(url),
@@ -44,6 +46,7 @@ export function normalizeHit(
     publishedAt: hit.publishedAt ?? dates.publishedAt ?? extractUrlDate(url),
     endsAt: dates.endsAt,
     source: hit.source,
+    sourceHost,
   };
   if (!isEnterableGiveaway(candidate)) return null;
   return candidate;

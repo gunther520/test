@@ -71,7 +71,7 @@ function TicketCard({
             {platform.label}
           </span>
           <span className="normal-case tracking-normal text-[11px]">
-            {displayHost(item.url)}
+            {displayHost(item.url, item.sourceHost)}
           </span>
           <span>{sourceLabel(item.source)}</span>
           {entered ? (

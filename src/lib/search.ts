@@ -87,9 +87,9 @@ export async function searchGiveaways(
     .filter(isRelevant)
     .filter((item) => isRecentGiveaway(item))
     .sort((a, b) => {
-      const timeDiff = recencyTimestamp(b) - recencyTimestamp(a);
-      if (timeDiff !== 0) return timeDiff;
-      return relevanceScore(b) - relevanceScore(a);
+      const qualityDiff = relevanceScore(b) - relevanceScore(a);
+      if (qualityDiff !== 0) return qualityDiff;
+      return recencyTimestamp(b) - recencyTimestamp(a);
     })
     .slice(0, 24);
 

@@ -79,10 +79,3 @@ export function unwrapDuckDuckGoUrl(href: string): string {
     return href;
   }
 }
-
-export function looksLikeGiveaway(title: string, snippet: string): boolean {
-  const text = `${title} ${snippet}`.toLowerCase();
-  return /giveaway|give away|lucky draw|raffle|sweepstake|contest|prize|comment to win|retweet to win|follow to enter|\bwin\b/.test(
-    text,
-  );
-}

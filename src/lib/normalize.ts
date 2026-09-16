@@ -1,7 +1,8 @@
 import { extractDates, extractUrlDate } from "./dates";
 import { classifyPlatform } from "./platforms";
+import { isEnterableGiveaway, isJunkNewsHost, hostnameOf } from "./quality";
 import type { Giveaway, PlatformFilter, ProviderId } from "./types";
-import { looksLikeGiveaway, stableId } from "./http";
+import { stableId } from "./http";
 
 export type RawHit = {
   title: string;
@@ -9,6 +10,7 @@ export type RawHit = {
   snippet: string;
   publishedAt?: string;
   source: ProviderId;
+  sourceHost?: string;
 };
 
 export function normalizeHit(
@@ -30,15 +32,16 @@ export function normalizeHit(
     return null;
   }
 
-  const platform = classifyPlatform(url, `${hit.title} ${hit.snippet}`);
+  const classifyUrl =
+    hostnameOf(url) === "news.google.com" && hit.sourceHost
+      ? `https://${hit.sourceHost}/`
+      : url;
+  const platform = classifyPlatform(classifyUrl, `${hit.title} ${hit.snippet}`);
   if (filter !== "all" && platform !== filter) return null;
-  const social = platform !== "other";
-  if (!looksLikeGiveaway(hit.title, hit.snippet) && !social) {
-    return null;
-  }
-
+  const sourceHost = hit.sourceHost || hostnameOf(url);
+  if (isJunkNewsHost(url, sourceHost)) return null;
   const dates = extractDates(`${hit.title} ${hit.snippet}`);
-  return {
+  const candidate = {
     id: stableId(url),
     title: hit.title.trim().slice(0, 180),
     platform,
@@ -47,7 +50,10 @@ export function normalizeHit(
     publishedAt: hit.publishedAt ?? dates.publishedAt ?? extractUrlDate(url),
     endsAt: dates.endsAt,
     source: hit.source,
+    sourceHost,
   };
+  if (!isEnterableGiveaway(candidate)) return null;
+  return candidate;
 }
 
 export function canonicalUrl(url: string): string {

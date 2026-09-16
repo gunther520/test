@@ -41,17 +41,19 @@ export async function fetchWithTimeout(
 }
 
 export function decodeHtml(value: string): string {
-  return value
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/\s+/g, " ")
-    .trim();
+  let out = value;
+  for (let i = 0; i < 3; i += 1) {
+    out = out
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;|&apos;/gi, "'")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+  }
+  return out.replace(/\s+/g, " ").trim();
 }
 
 export function stableId(url: string): string {

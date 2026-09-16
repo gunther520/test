@@ -18,7 +18,8 @@ export type ProviderId =
   | "reddit"
   | "youtube"
   | "google-cse"
-  | "brave";
+  | "brave"
+  | "gemini";
 
 export type Giveaway = {
   id: string;

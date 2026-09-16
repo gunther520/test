@@ -1,4 +1,5 @@
 import { braveConfigured, searchBrave } from "./providers/brave";
+import { geminiConfigured, searchGemini } from "./providers/gemini";
 import { googleCseConfigured, searchGoogleCse } from "./providers/google-cse";
 import { searchReddit } from "./providers/reddit";
 import { searchWeb } from "./providers/web-search";
@@ -17,6 +18,12 @@ import type {
 export function setupHints(): SetupHint[] {
   return [
     {
+      env: "GEMINI_API_KEY",
+      purpose: "Gemini with Google Search grounding (preferred optional Google web search)",
+      docs: "https://aistudio.google.com/apikey",
+      set: geminiConfigured(),
+    },
+    {
       env: "YOUTUBE_API_KEY",
       purpose: "Official YouTube Data API search for giveaway videos",
       docs: "https://developers.google.com/youtube/v3/getting-started",
@@ -24,13 +31,13 @@ export function setupHints(): SetupHint[] {
     },
     {
       env: "BRAVE_SEARCH_API_KEY",
-      purpose: "Brave Search API (preferred public web results)",
+      purpose: "Brave Search API (optional public web results)",
       docs: "https://brave.com/search/api/",
       set: braveConfigured(),
     },
     {
       env: "GOOGLE_API_KEY + GOOGLE_CSE_ID",
-      purpose: "Google Programmable Search Engine for indexed social URLs",
+      purpose: "Google Programmable Search Engine (optional; CSE may fail if the Cloud project lacks JSON API access)",
       docs: "https://programmablesearchengine.google.com/",
       set: googleCseConfigured(),
     },
@@ -110,6 +117,14 @@ export async function searchGiveaways(
       searchWeb(query, platform),
     ),
     runProvider(
+      "gemini",
+      "Gemini Search grounding",
+      true,
+      geminiConfigured(),
+      geminiConfigured(),
+      () => searchGemini(query, platform),
+    ),
+    runProvider(
       "brave",
       "Brave Search",
       true,
@@ -152,6 +167,7 @@ export async function searchGiveaways(
   const providers = jobs.map((job) => job.status);
   for (const status of providers) {
     if (status.used && !status.ok && status.error) {
+      if (status.optional && results.length > 0) continue;
       if (status.id === "reddit" && results.length > 0) continue;
       warnings.push(`${status.label}: ${status.error}`);
     }
@@ -177,6 +193,6 @@ export async function searchGiveaways(
 export function statusPayload() {
   return {
     setup: setupHints(),
-    note: "Works without keys via public web search (DuckDuckGo when available, otherwise Google News RSS) plus Reddit's public JSON API. Official YouTube / Brave / Google CSE APIs are used when configured.",
+    note: "Works without keys via public web search (DuckDuckGo when available, otherwise Google News RSS) plus Reddit's public JSON API. Optional GEMINI_API_KEY enables Gemini with Google Search grounding. YouTube / Brave / Google CSE are also used when configured.",
   };
 }

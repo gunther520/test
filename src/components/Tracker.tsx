@@ -22,6 +22,8 @@ function sourceLabel(source: Giveaway["source"]): string {
       return "Brave";
     case "google-cse":
       return "Google CSE";
+    case "gemini":
+      return "Gemini";
     default:
       return "Web search";
   }
@@ -124,7 +126,18 @@ function EmptyState({
       <ul className="mx-auto mt-6 max-w-md space-y-2 text-left text-sm text-ink/80">
         <li>— Try a broader term such as giveaway or lucky draw</li>
         <li>— Switch the platform filter back to All</li>
-        <li>— Add an optional API key for deeper official search</li>
+        <li>
+          — Add an optional Gemini key from{" "}
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+          >
+            aistudio.google.com/apikey
+          </a>{" "}
+          for grounded Google web search
+        </li>
       </ul>
       <SetupList setup={setup} compact />
     </section>
@@ -161,7 +174,17 @@ function ErrorState({
       ) : null}
       <p className="mt-4 text-sm text-ink/70">
         Drawboard uses public web search and optional official APIs. It does not
-        scrape login walls, CAPTCHAs, or private accounts.
+        scrape login walls, CAPTCHAs, or private accounts. For Gemini Search
+        grounding, get a key at{" "}
+        <a
+          href="https://aistudio.google.com/apikey"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2"
+        >
+          aistudio.google.com/apikey
+        </a>
+        .
       </p>
       <button
         type="button"
@@ -192,6 +215,16 @@ function SetupList({
         Copy <code className="font-mono text-xs">.env.example</code> to{" "}
         <code className="font-mono text-xs">.env.local</code>, fill any keys you
         have, then restart <code className="font-mono text-xs">npm run dev</code>.
+        Gemini keys come from{" "}
+        <a
+          href="https://aistudio.google.com/apikey"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2"
+        >
+          Google AI Studio
+        </a>
+        .
       </p>
       <ul className="mt-3 divide-y divide-ink/10 border border-ink/10 bg-ticket">
         {setup.map((hint) => (
@@ -199,6 +232,14 @@ function SetupList({
             <div>
               <p className="font-mono text-sm">{hint.env}</p>
               <p className="text-sm text-ink/70">{hint.purpose}</p>
+              <a
+                href={hint.docs}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs underline underline-offset-2"
+              >
+                {hint.env.startsWith("GEMINI") ? "Get a Gemini key" : "Docs"}
+              </a>
             </div>
             <span
               className={`mt-1 font-mono text-[10px] uppercase tracking-widest ${

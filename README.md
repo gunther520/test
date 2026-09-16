@@ -6,7 +6,7 @@ Web app that searches **public** social and web sources for giveaway polls, luck
 
 | Platform | How results are found |
 | --- | --- |
-| Instagram, Facebook, X/Twitter, YouTube, Twitch, TikTok | Public web search with `site:` queries (DuckDuckGo HTML, Google News RSS; Brave or Google CSE if keys are set) |
+| Instagram, Facebook, X/Twitter, YouTube, Twitch, TikTok | Public web search with `site:` queries (DuckDuckGo HTML, Google News RSS; Gemini Search grounding, Brave, or Google CSE if keys are set) |
 | YouTube | Official YouTube Data API when `YOUTUBE_API_KEY` is set |
 | Reddit and giveaway hosts (Gleam, etc.) | Reddit public JSON search + hostname classification |
 
@@ -33,11 +33,12 @@ Copy `.env.example` to `.env.local` and restart the dev server.
 
 | Variable | Purpose |
 | --- | --- |
+| `GEMINI_API_KEY` | Gemini with Google Search grounding (preferred optional Google path). Get a key at [Google AI Studio](https://aistudio.google.com/apikey) |
 | `YOUTUBE_API_KEY` | YouTube Data API v3 search |
-| `BRAVE_SEARCH_API_KEY` | Brave Search API (preferred web backend) |
+| `BRAVE_SEARCH_API_KEY` | Brave Search API |
 | `GOOGLE_API_KEY` + `GOOGLE_CSE_ID` | Google Programmable Search Engine |
 
-The UI footer lists which of these are configured.
+The UI footer lists which of these are configured. Vertex AI Search is not used.
 
 ## Adding a platform
 

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #efe2c4;
+  --ink: #1a1208;
+  --ticket: #fff8ea;
+  --stamp: #b42318;
+  --forest: #1f4f3d;
+  --rule: #d4c19a;
+  --stub: #245c4a;
+  --muted: #6b5744;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ticket: var(--ticket);
+  --color-stamp: var(--stamp);
+  --color-forest: var(--forest);
+  --color-rule: var(--rule);
+  --color-stub: var(--stub);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-ibm), ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(26, 18, 8, 0.06) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+.ticket {
+  background:
+    radial-gradient(circle at left, transparent 10px, var(--ticket) 10.5px) left / 12px 24px repeat-y,
+    radial-gradient(circle at right, transparent 10px, var(--ticket) 10.5px) right / 12px 24px repeat-y,
+    var(--ticket);
+  background-clip: padding-box;
+}
+
+.ticket-stub {
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 6px,
+    rgba(255, 248, 234, 0.12) 6px,
+    rgba(255, 248, 234, 0.12) 7px
+  );
+}
+
+::selection {
+  background: #f0c34a;
+  color: var(--ink);
+}

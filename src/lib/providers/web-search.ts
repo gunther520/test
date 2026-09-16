@@ -1,9 +1,25 @@
 import { fetchWithTimeout, ProviderError, unwrapDuckDuckGoUrl, decodeHtml } from "../http";
 import { FILTERABLE_PLATFORMS, giveawayQuery, siteQueryFor } from "../platforms";
 import { normalizeHit, type RawHit } from "../normalize";
+import { isEnterablePostUrl, isJunkNewsHost } from "../quality";
 import type { Giveaway, PlatformFilter } from "../types";
 
 const RSS_PER_FEED = 12;
+
+function firstHttpUrl(text: string): string | undefined {
+  const match = text.match(/https?:\/\/[^\s"'<>]+/i);
+  if (!match) return undefined;
+  return match[0].replace(/[.,;)]+$/, "");
+}
+
+function unwrapRssLink(link: string, sourceHref: string, snippet: string): string {
+  const candidates = [link, firstHttpUrl(snippet) ?? "", sourceHref].filter(Boolean);
+  const social = candidates.find((url) => isEnterablePostUrl(url));
+  if (social) return social;
+  const notNews = candidates.find((url) => url && !isJunkNewsHost(url));
+  if (notNews) return notNews;
+  return link;
+}
 
 function parseDuckDuckGo(html: string): RawHit[] {
   const hits: RawHit[] = [];
@@ -73,16 +89,20 @@ function parseRss(xml: string): RawHit[] {
     const sourceName = decodeHtml(
       chunk.match(/<source[^>]*>([\s\S]*?)<\/source>/i)?.[1] ?? "",
     );
+    const sourceHref = decodeHtml(
+      chunk.match(/<source[^>]*url="([^"]+)"/i)?.[1] ?? "",
+    );
     const pub = chunk.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1];
     let publishedAt: string | undefined;
     if (pub) {
       const date = new Date(decodeHtml(pub));
       if (!Number.isNaN(date.getTime())) publishedAt = date.toISOString();
     }
-    if (title && link) {
+    const url = unwrapRssLink(link, sourceHref, snippet);
+    if (title && url) {
       items.push({
         title,
-        url: link,
+        url,
         snippet: [sourceName, snippet].filter(Boolean).join(" — ").slice(0, 280),
         publishedAt,
         source: "web-search",

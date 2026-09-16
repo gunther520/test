@@ -149,9 +149,8 @@ export function siteQueryFor(filter: PlatformFilter): string {
 
 export function giveawayQuery(userQuery: string): string {
   const trimmed = userQuery.trim() || "giveaway";
-  const alreadyHasTerm = /giveaway|lucky draw|raffle|sweepstake|contest/i.test(
-    trimmed,
-  );
+  const alreadyHasTerm =
+    /giveaway|lucky draw|raffle|sweepstake|contest|抽獎|免費送/i.test(trimmed);
   if (alreadyHasTerm) return trimmed;
-  return `${trimmed} (giveaway OR "lucky draw" OR raffle OR sweepstakes OR "comment to win")`;
+  return `${trimmed} (giveaway OR "lucky draw" OR raffle OR sweepstakes OR "comment to win" OR 抽獎)`;
 }

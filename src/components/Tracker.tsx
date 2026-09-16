@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDate, sortGiveaways, type SortMode } from "@/lib/dates";
 import { FILTERABLE_PLATFORMS, getPlatform } from "@/lib/platforms";
+import { displayHost } from "@/lib/quality";
 import {
   dismissGiveaway,
   loadPrefs,
@@ -68,6 +69,9 @@ function TicketCard({
         <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
           <span className="rounded-sm bg-ink/8 px-1.5 py-0.5 text-ink">
             {platform.label}
+          </span>
+          <span className="normal-case tracking-normal text-[11px]">
+            {displayHost(item.url)}
           </span>
           <span>{sourceLabel(item.source)}</span>
           {entered ? (
@@ -635,9 +639,11 @@ export function Tracker({
             available, otherwise Google News RSS using each platform’s{" "}
             <code className="font-mono text-xs">site:</code> pattern. Reddit’s
             public JSON API is used when that host allows it. Only listings
-            dated in the last 31 days are shown; undated hits are dropped. Save,
-            entered, and the last search stay in localStorage on this device. No
-            API keys, no Gemini, no Custom Search, no Brave, and no Vertex.
+            dated in the last 31 days are shown; undated hits are dropped. The
+            list keeps social posts and contest hosts, not news roundups; a lone
+            “giveaway” is not enough. Save, entered, and the last search stay in
+            localStorage on this device. No API keys, no Gemini, no Custom
+            Search, no Brave, and no Vertex.
           </p>
           <p className="mt-3 max-w-2xl">
             To track another public source, add a row in{" "}

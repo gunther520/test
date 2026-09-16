@@ -1,10 +1,14 @@
 import {
   displayHost,
+  howToEnter,
   isEnterableGiveaway,
   isEnterablePostUrl,
   isJunkNewsHost,
+  isUnofficialHost,
   qualityScore,
+  shareText,
 } from "../src/lib/quality";
+import { giveawayQuery } from "../src/lib/platforms";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -151,6 +155,34 @@ assert(
     snippet: "ends tomorrow",
   }),
   "google news cnn source dropped",
+);
+
+const qEn = giveawayQuery("giveaway");
+assert(qEn.startsWith("giveaway"), "english query kept");
+assert(qEn.includes("抽獎") && qEn.includes("免費送") && qEn.includes("送你"), "hk terms added");
+assert(qEn.includes("lucky draw"), "lucky draw added");
+const qSteam = giveawayQuery("Steam Deck");
+assert(qSteam.startsWith("Steam Deck"), "brand query kept");
+assert(qSteam.includes("giveaway") && qSteam.includes("抽獎"), "brand still searches contests");
+assert(giveawayQuery("抽獎").includes("giveaway"), "chinese query still searches english");
+
+assert(
+  howToEnter("Giveaway", "Comment on this post and tag a friend. Must be following me") ===
+    "How to enter: comment · tag a friend · follow the host",
+  "how to enter combined",
+);
+assert(
+  howToEnter("抽獎送你 iPhone", "免費送") === "How to enter: 抽獎 on the original post",
+  "how to enter chinese",
+);
+assert(!howToEnter("Random post", "hello"), "no how-to without intent");
+
+assert(isUnofficialHost("https://www.thegreenroomtheatre.org/raffle"), "brand site caution");
+assert(!isUnofficialHost("https://www.instagram.com/p/abc/"), "ig not unofficial");
+assert(!isUnofficialHost("https://gleam.io/xyz"), "gleam not unofficial");
+assert(
+  shareText("Win AirPods", "https://example.com/p") === "Win AirPods\nhttps://example.com/p",
+  "whatsapp share body",
 );
 
 console.log("ok quality filter");

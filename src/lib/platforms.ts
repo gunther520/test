@@ -149,8 +149,16 @@ export function siteQueryFor(filter: PlatformFilter): string {
 
 export function giveawayQuery(userQuery: string): string {
   const trimmed = userQuery.trim() || "giveaway";
-  const alreadyHasTerm =
-    /giveaway|lucky draw|raffle|sweepstake|contest|抽獎|免費送/i.test(trimmed);
-  if (alreadyHasTerm) return trimmed;
-  return `${trimmed} (giveaway OR "lucky draw" OR raffle OR sweepstakes OR "comment to win" OR 抽獎)`;
+  const extras: string[] = [];
+  const has = (term: string) =>
+    trimmed.toLowerCase().includes(term.toLowerCase()) || trimmed.includes(term);
+
+  if (!has("giveaway")) extras.push("giveaway");
+  if (!has("lucky draw")) extras.push('"lucky draw"');
+  if (!has("抽獎")) extras.push("抽獎");
+  if (!has("免費送")) extras.push("免費送");
+  if (!has("送你")) extras.push("送你");
+
+  if (extras.length === 0) return trimmed;
+  return `${trimmed} (${extras.join(" OR ")})`;
 }

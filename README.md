@@ -15,7 +15,7 @@ Indexed public URLs are sparse. Some datacenters block DuckDuckGo and Reddit —
 
 Only listings dated in the **last 31 days** are shown (RSS `pubDate`, Reddit `created_utc`, or a date parsed from the title/snippet). Hits with no usable date are dropped so old undated posts do not appear.
 
-The list prefers **enterable social posts and contest hosts** (Instagram `/p/` `/reel/`, Facebook posts, X `/status/`, YouTube watch/shorts, TikTok `/video/`, Reddit comments, Gleam/Woobox). Generic news/blog hosts and how-to roundups are dropped. A lone word “giveaway” is not enough unless the URL is a social post. Each card shows the source host.
+The list prefers **enterable social posts and contest hosts** (Instagram `/p/` `/reel/`, Facebook posts, X `/status/`, YouTube watch/shorts, TikTok `/video/`, Reddit comments, Gleam/Woobox). Generic news/blog hosts and how-to roundups are dropped. A lone word “giveaway” is not enough unless the URL is a social post. Each card shows the source host, a **how to enter** line when the post says comment/tag/follow/RT/抽獎, and a small unofficial caution on unknown hosts. End/draw dates are shown larger than the news posted date. Search ORs in 抽獎 / 免費送 / 送你 so Hong Kong listings can appear. Share uses the device share sheet or copies a WhatsApp-friendly link.
 
 ## Tracker (this device)
 

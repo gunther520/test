@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDate, sortGiveaways, type SortMode } from "@/lib/dates";
 import { FILTERABLE_PLATFORMS, getPlatform } from "@/lib/platforms";
-import { displayHost } from "@/lib/quality";
+import { displayHost, howToEnter, isUnofficialHost, shareText } from "@/lib/quality";
 import {
   dismissGiveaway,
   loadPrefs,
@@ -22,7 +22,7 @@ import type {
   SearchResponse,
 } from "@/lib/types";
 
-const SUGGESTIONS = ["giveaway", "lucky draw", "Steam Deck", "AirPods", "raffle"];
+const SUGGESTIONS = ["giveaway", "lucky draw", "抽獎", "Steam Deck", "AirPods", "raffle"];
 
 type View = "search" | "saved";
 type SavedPane = "active" | "entered";
@@ -58,6 +58,28 @@ function TicketCard({
   const ends = formatDate(item.endsAt);
   const entered = status === "entered";
   const saved = status === "active" || entered;
+  const enterLine = howToEnter(item.title, item.snippet);
+  const unofficial = isUnofficialHost(item.url, item.sourceHost);
+  const [copied, setCopied] = useState(false);
+
+  async function share() {
+    const text = shareText(item.title, item.url);
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: item.title, text, url: item.url });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      window.prompt("Copy this link", text);
+    }
+  }
 
   return (
     <article
@@ -85,6 +107,16 @@ function TicketCard({
             </span>
           ) : null}
         </div>
+        {ends ? (
+          <p className="font-mono text-stamp">
+            <span className="font-display text-[1.65rem] leading-none font-semibold">
+              {ends}
+            </span>
+            <span className="ml-2 text-[11px] uppercase tracking-[0.16em]">
+              end / draw
+            </span>
+          </p>
+        ) : null}
         <h2 className="font-display text-[1.35rem] leading-snug font-semibold text-pretty">
           <a
             href={item.url}
@@ -98,24 +130,27 @@ function TicketCard({
         {item.snippet ? (
           <p className="text-[15px] leading-6 text-ink/75">{item.snippet}</p>
         ) : null}
+        {enterLine ? (
+          <p className="text-sm text-forest">{enterLine}</p>
+        ) : null}
+        {unofficial ? (
+          <p className="font-mono text-[11px] text-muted">
+            Unofficial host — double-check before you enter.
+          </p>
+        ) : null}
         <dl className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted">
           {published ? (
-            <div>
+            <div className={ends ? "opacity-60" : ""}>
               <dt className="inline text-ink/45">Posted </dt>
               <dd className="inline">{published}</dd>
             </div>
           ) : null}
-          {ends ? (
-            <div>
-              <dt className="inline text-stamp">Ends </dt>
-              <dd className="inline text-stamp">{ends}</dd>
-            </div>
-          ) : (
+          {!ends ? (
             <div>
               <dt className="inline text-ink/45">Deadline </dt>
               <dd className="inline">not listed</dd>
             </div>
-          )}
+          ) : null}
         </dl>
         <div className="mt-auto flex flex-wrap gap-2">
           {view === "search" ? (
@@ -170,11 +205,18 @@ function TicketCard({
               </button>
             </>
           )}
+          <button
+            type="button"
+            onClick={() => void share()}
+            className="border border-ink/30 bg-ticket px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] hover:border-ink"
+          >
+            {copied ? "Copied" : "Share"}
+          </button>
         </div>
       </div>
       <aside className="ticket-stub flex w-[4.6rem] shrink-0 flex-col items-center justify-between border-l border-dashed border-white/30 bg-stub px-2 py-4 text-ticket">
         <span className="font-mono text-[10px] tracking-[0.2em] uppercase">
-          draw
+          {ends ? "ends" : "draw"}
         </span>
         <span
           className="font-display text-2xl font-semibold"

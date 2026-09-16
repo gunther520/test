@@ -237,3 +237,36 @@ export function qualityScore(item: QualityFields): number {
   if (isNonEnterableCopy(item.title, item.snippet)) score -= 4;
   return score;
 }
+
+export function howToEnter(title: string, snippet = ""): string | undefined {
+  const text = `${title} ${snippet}`;
+  const lower = text.toLowerCase();
+  const bits: string[] = [];
+  if (/comment to win|comment on this post|留言/.test(lower) || /留言/.test(text)) {
+    bits.push("comment");
+  }
+  if (/tag (a friend|friends)|標註/.test(lower) || /標註/.test(text)) {
+    bits.push("tag a friend");
+  }
+  if (/follow to (enter|win)|must be following/.test(lower)) {
+    bits.push("follow the host");
+  }
+  if (/retweet to win|\brt to win\b/.test(lower)) {
+    bits.push("repost / RT");
+  }
+  if (bits.length > 0) return `How to enter: ${bits.join(" · ")}`;
+  if (/抽獎|免費送|送你/.test(text)) return "How to enter: 抽獎 on the original post";
+  if (hasStrongEnterIntent(title, snippet)) return "How to enter: follow the steps on the post";
+  return undefined;
+}
+
+export function isUnofficialHost(url: string, sourceHost?: string): boolean {
+  const host = displayHost(url, sourceHost);
+  if (isSocialHostName(host)) return false;
+  if (hostMatches(host, CONTEST_HOSTS)) return false;
+  return Boolean(host) && host !== "unknown host";
+}
+
+export function shareText(title: string, url: string): string {
+  return `${title}\n${url}`;
+}

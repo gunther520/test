@@ -117,12 +117,19 @@ function parseRss(xml: string): RawHit[] {
   return items;
 }
 
-async function searchNewsRss(query: string): Promise<RawHit[]> {
-  const params = new URLSearchParams({
-    q: query,
+async function searchNewsRss(
+  query: string,
+  locale: { hl: string; gl: string; ceid: string } = {
     hl: "en-US",
     gl: "US",
     ceid: "US:en",
+  },
+): Promise<RawHit[]> {
+  const params = new URLSearchParams({
+    q: query,
+    hl: locale.hl,
+    gl: locale.gl,
+    ceid: locale.ceid,
   });
   const url = `https://news.google.com/rss/search?${params.toString()}`;
   const response = await fetchWithTimeout(url, {
@@ -160,7 +167,10 @@ export async function searchWeb(
 
   try {
     const rssGroups = await Promise.allSettled(
-      rssQueries(userQuery, platform).map((query) => searchNewsRss(query)),
+      rssQueries(userQuery, platform).flatMap((query) => [
+        searchNewsRss(query),
+        searchNewsRss(query, { hl: "zh-HK", gl: "HK", ceid: "HK:zh-Hant" }),
+      ]),
     );
     const rssHits: RawHit[] = [];
     let rssFailed = 0;

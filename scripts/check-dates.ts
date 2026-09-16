@@ -3,6 +3,7 @@ import {
   extractUrlDate,
   isRecentGiveaway,
   RECENCY_DAYS,
+  sortGiveaways,
 } from "../src/lib/dates";
 
 const now = Date.parse("2026-09-16T12:00:00.000Z");
@@ -72,5 +73,28 @@ assert(
   ),
   "old ended drop",
 );
+
+const sorted = sortGiveaways(
+  [
+    { publishedAt: "2026-09-10T00:00:00.000Z" },
+    { publishedAt: "2026-09-01T00:00:00.000Z", endsAt: "2026-09-18T00:00:00.000Z" },
+    { publishedAt: "2026-09-15T00:00:00.000Z", endsAt: "2026-09-30T00:00:00.000Z" },
+  ],
+  "ending",
+  now,
+);
+assert(sorted[0].endsAt?.startsWith("2026-09-18") === true, "ending soon first");
+assert(sorted[1].endsAt?.startsWith("2026-09-30") === true, "later deadline second");
+assert(!sorted[2].endsAt, "no deadline last");
+
+const newest = sortGiveaways(
+  [
+    { publishedAt: "2026-09-01T00:00:00.000Z" },
+    { publishedAt: "2026-09-15T00:00:00.000Z" },
+  ],
+  "newest",
+  now,
+);
+assert(newest[0].publishedAt?.startsWith("2026-09-15") === true, "newest first");
 
 console.log(`ok recency=${RECENCY_DAYS}d`);

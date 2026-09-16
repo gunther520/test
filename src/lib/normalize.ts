@@ -50,11 +50,15 @@ export function normalizeHit(
   };
 }
 
+export function canonicalUrl(url: string): string {
+  return url.replace(/\/+$/, "").toLowerCase();
+}
+
 export function dedupe(results: Giveaway[]): Giveaway[] {
   const seen = new Set<string>();
   const out: Giveaway[] = [];
   for (const item of results) {
-    const key = item.url.replace(/\/+$/, "").toLowerCase();
+    const key = canonicalUrl(item.url);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(item);

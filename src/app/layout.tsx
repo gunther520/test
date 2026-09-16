@@ -22,7 +22,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Drawboard — Giveaway tracker",
   description:
-    "Search public social posts for giveaways, lucky draws, and raffle polls across Instagram, Facebook, X, YouTube, Twitch, and more.",
+    "Find public giveaways, save them on this device, and mark the ones you have entered. Last 31 days, free public search only.",
 };
 
 export default function RootLayout({

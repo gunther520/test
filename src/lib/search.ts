@@ -1,8 +1,5 @@
-import { braveConfigured, searchBrave } from "./providers/brave";
-import { googleCseConfigured, searchGoogleCse } from "./providers/google-cse";
 import { searchReddit } from "./providers/reddit";
 import { searchWeb } from "./providers/web-search";
-import { searchYoutube, youtubeConfigured } from "./providers/youtube";
 import { dedupe } from "./normalize";
 import { parsePlatformFilter } from "./platforms";
 import { isRelevant, relevanceScore } from "./score";
@@ -11,31 +8,7 @@ import type {
   PlatformFilter,
   ProviderStatus,
   SearchResponse,
-  SetupHint,
 } from "./types";
-
-export function setupHints(): SetupHint[] {
-  return [
-    {
-      env: "YOUTUBE_API_KEY",
-      purpose: "Official YouTube Data API search for giveaway videos",
-      docs: "https://developers.google.com/youtube/v3/getting-started",
-      set: youtubeConfigured(),
-    },
-    {
-      env: "BRAVE_SEARCH_API_KEY",
-      purpose: "Brave Search API (preferred public web results)",
-      docs: "https://brave.com/search/api/",
-      set: braveConfigured(),
-    },
-    {
-      env: "GOOGLE_API_KEY + GOOGLE_CSE_ID",
-      purpose: "Google Programmable Search Engine for indexed social URLs",
-      docs: "https://programmablesearchengine.google.com/",
-      set: googleCseConfigured(),
-    },
-  ];
-}
 
 async function runProvider(
   id: string,
@@ -56,11 +29,6 @@ async function runProvider(
         ok: true,
         optional,
         count: 0,
-        hint: configured
-          ? undefined
-          : optional
-            ? `Not configured — set ${label} keys in .env.local`
-            : undefined,
       },
     };
   }
@@ -109,32 +77,8 @@ export async function searchGiveaways(
     runProvider("web-search", "Public web search", false, true, true, () =>
       searchWeb(query, platform),
     ),
-    runProvider(
-      "brave",
-      "Brave Search",
-      true,
-      braveConfigured(),
-      braveConfigured(),
-      () => searchBrave(query, platform),
-    ),
-    runProvider(
-      "google-cse",
-      "Google Programmable Search",
-      true,
-      googleCseConfigured(),
-      googleCseConfigured(),
-      () => searchGoogleCse(query, platform),
-    ),
     runProvider("reddit", "Reddit public JSON", false, true, true, () =>
       searchReddit(query, platform),
-    ),
-    runProvider(
-      "youtube",
-      "YouTube Data API",
-      true,
-      youtubeConfigured(),
-      youtubeConfigured() && (platform === "all" || platform === "youtube"),
-      () => searchYoutube(query, platform),
     ),
   ]);
 
@@ -160,7 +104,7 @@ export async function searchGiveaways(
   const anyOk = providers.some((p) => p.used && p.ok);
   if (!anyOk) {
     warnings.unshift(
-      "Every search backend failed. The tracker does not log into social apps or bypass access controls — add an API key or retry.",
+      "Public search sources did not respond. Drawboard does not log into social apps or use paid search APIs — retry or try another query.",
     );
   }
 
@@ -170,13 +114,13 @@ export async function searchGiveaways(
     results,
     providers,
     warnings,
-    setup: setupHints(),
+    setup: [],
   };
 }
 
 export function statusPayload() {
   return {
-    setup: setupHints(),
-    note: "Works without keys via public web search (DuckDuckGo when available, otherwise Google News RSS) plus Reddit's public JSON API. Official YouTube / Brave / Google CSE APIs are used when configured.",
+    setup: [],
+    note: "Free-tier public search only: DuckDuckGo HTML when available, otherwise Google News RSS with site: patterns, plus Reddit public JSON when the host allows it. No API keys required.",
   };
 }

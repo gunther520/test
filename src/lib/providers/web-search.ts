@@ -48,7 +48,9 @@ async function searchDuckDuckGo(query: string): Promise<RawHit[]> {
   }
   const html = await response.text();
   if (/anomaly-modal|captcha|bot.?detect/i.test(html) && !/result__a/.test(html)) {
-    throw new ProviderError("DuckDuckGo presented a bot check; try Brave or Google CSE keys");
+    throw new ProviderError(
+      "DuckDuckGo presented a bot check; falling back to other public sources",
+    );
   }
   return parseDuckDuckGo(html);
 }

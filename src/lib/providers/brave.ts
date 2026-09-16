@@ -1,3 +1,4 @@
+/** Leftover optional provider. Not invoked by supported free-tier search. */
 import { fetchWithTimeout, ProviderError } from "../http";
 import { giveawayQuery, siteQueryFor } from "../platforms";
 import { normalizeHit } from "../normalize";
